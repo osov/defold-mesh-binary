@@ -185,56 +185,19 @@ M.load = function(url, path, config)
 
 			table.insert(instance.models[name], id)
 
-			local options = vmath.vector4(0.0)
-			local options_specular = vmath.vector4(0.0)
-			options_specular.y = mesh.material.specular.value
-			options_specular.z = mesh.material.roughness.value
-
-			options.z = mesh.material.type
-
 			if anim_texture then
 				instance.textures[anim_texture] = true;
 				instance.textures[runtime_texture] = true;
-				go.set(mesh_url, "texture0", anim_texture)
-				go.set(mesh_url, "texture4", runtime_texture)
+				go.set(mesh_url, "texture1", anim_texture)
+				go.set(mesh_url, "texture2", runtime_texture)
 			end
 
 			if mesh.material.texture then
-				set_texture(instance, mesh_url, "texture1", mesh.material.texture, "texel")
-				options.x = 1.0
-			end
-
-			if mesh.material.normal and
-			set_texture(instance, mesh_url, "texture2", mesh.material.normal.texture) 
-			then
-				options.y = mesh.material.normal.value
-			end
-
-			if mesh.material.specular.texture and
-			set_texture(instance, mesh_url, "texture3", mesh.material.specular.texture) 
-			then
-				options_specular.x = 1.0 + mesh.material.specular.invert
-				if mesh.material.specular.ramp then
-					local r = mesh.material.specular.ramp
-					go.set(mesh_url, "spec_ramp", vmath.vector4(r.p1, r.v1, r.p2, r.v2))
-				end
-			end
-
-			if mesh.material.roughness.texture and
-			set_texture(instance, mesh_url, "texture3", mesh.material.roughness.texture) 
-			then
-				-- roughness and specular are usually the same?
-				options_specular.w = 1.0
-				if mesh.material.roughness.ramp then
-					local r = mesh.material.roughness.ramp
-					go.set(mesh_url, "rough_ramp", vmath.vector4(r.p1, r.v1, r.p2, r.v2))
-				end
+				set_texture(instance, mesh_url, "texture0", mesh.material.texture)
 			end
 
 			pcall(function()
-				go.set(mesh_url, "base_color", mesh.material and mesh.material.color or vmath.vector4(0.8,0.8,0.8,1))
-				go.set(mesh_url, "options", options)
-				go.set(mesh_url, "options_specular", options_specular)
+				go.set(mesh_url, "base_color", mesh.material and mesh.material.color or vmath.vector4(1,1,1,1))
 			end)
 		end
 
@@ -244,7 +207,7 @@ M.load = function(url, path, config)
 	--set hierarchy
 	for _, mesh in pairs(instance.game_objects) do
 		if mesh.parent and instance.game_objects[mesh.parent] then
-			go.set_parent(mesh.id, instance.game_objects[mesh.parent].id, false)			
+			go.set_parent(mesh.id, instance.game_objects[mesh.parent].id, false)
 		else
 			go.set_parent(mesh.id, url, false)
 		end

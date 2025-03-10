@@ -4,8 +4,8 @@ vertex_program: "/def-mesh/materials/model.vp"
 fragment_program: "/def-mesh/materials/model.fp"
 vertex_space: VERTEX_SPACE_LOCAL
 vertex_constants {
-  name: "mtx_worldview"
-  type: CONSTANT_TYPE_WORLDVIEW
+  name: "mtx_world"
+  type: CONSTANT_TYPE_WORLD
 }
 vertex_constants {
   name: "mtx_view"
@@ -36,7 +36,7 @@ vertex_constants {
   }
 }
 fragment_constants {
-  name: "texel"
+  name: "base_color"
   type: CONSTANT_TYPE_USER
   value {
     x: 1.0
@@ -44,39 +44,6 @@ fragment_constants {
     z: 1.0
     w: 1.0
   }
-}
-fragment_constants {
-  name: "options"
-  type: CONSTANT_TYPE_USER
-  value {
-  }
-}
-fragment_constants {
-  name: "options_specular"
-  type: CONSTANT_TYPE_USER
-  value {
-  }
-}
-fragment_constants {
-  name: "spec_ramp"
-  type: CONSTANT_TYPE_USER
-  value {
-    x: -1.0
-  }
-}
-fragment_constants {
-  name: "rough_ramp"
-  type: CONSTANT_TYPE_USER
-  value {
-    x: -1.0
-  }
-}
-samplers {
-  name: "tex_anim"
-  wrap_u: WRAP_MODE_CLAMP_TO_EDGE
-  wrap_v: WRAP_MODE_CLAMP_TO_EDGE
-  filter_min: FILTER_MODE_MIN_NEAREST
-  filter_mag: FILTER_MODE_MAG_NEAREST
 }
 samplers {
   name: "tex_diffuse"
@@ -86,18 +53,11 @@ samplers {
   filter_mag: FILTER_MODE_MAG_LINEAR
 }
 samplers {
-  name: "tex_normal"
+  name: "tex_anim"
   wrap_u: WRAP_MODE_CLAMP_TO_EDGE
   wrap_v: WRAP_MODE_CLAMP_TO_EDGE
-  filter_min: FILTER_MODE_MIN_LINEAR
-  filter_mag: FILTER_MODE_MAG_LINEAR
-}
-samplers {
-  name: "tex_rough"
-  wrap_u: WRAP_MODE_CLAMP_TO_EDGE
-  wrap_v: WRAP_MODE_CLAMP_TO_EDGE
-  filter_min: FILTER_MODE_MIN_LINEAR
-  filter_mag: FILTER_MODE_MAG_LINEAR
+  filter_min: FILTER_MODE_MIN_NEAREST
+  filter_mag: FILTER_MODE_MAG_NEAREST
 }
 samplers {
   name: "tex_runtime"
