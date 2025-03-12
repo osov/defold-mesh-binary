@@ -122,8 +122,9 @@ M.load = function(url, path, config)
 
 	config = config or {}
 
-	if (config.url_binary)
+	if config.url_binary then
 		instance.url_binary = config.url_binary
+	end
 
 	instance.texture_folder = config.textures or "/assets/"
 	if string.find(instance.texture_folder, "/") ~= 1 then
