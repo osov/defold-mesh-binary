@@ -35,16 +35,6 @@ vertex_constants {
   value {
   }
 }
-fragment_constants {
-  name: "base_color"
-  type: CONSTANT_TYPE_USER
-  value {
-    x: 1.0
-    y: 1.0
-    z: 1.0
-    w: 1.0
-  }
-}
 samplers {
   name: "tex_diffuse"
   wrap_u: WRAP_MODE_CLAMP_TO_EDGE
