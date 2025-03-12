@@ -80,7 +80,7 @@ local function get_bone_go(self, bone)
 		return self.bones_go[bone]
 	end
 
-	local id = factory.create(msg.url(self.url.socket, self.url.path, "factory_bone"))
+	local id = factory.create(msg.url(self.url_binary.socket, self.url_binary.path, "factory_bone"))
 
 	local parent = self.binary:attach_bone_go(id, bone)
 	if parent then
@@ -100,9 +100,9 @@ config = {
 	verbose - true to get models info
 	textures - path to folder with textures
 	bake -  true to bake animations into texture
-	aabb - float, scale factor - force aabb creation scaled with this value 
+	aabb - float, scale factor - force aabb creation scaled with this value
 	(for frustum culling skinned meshes)
-	materials - table of materials to replace, 
+	materials - table of materials to replace,
 	use editor script "Add materials from model" to generate properties
 }
 --]]
@@ -116,10 +116,14 @@ M.load = function(url, path, config)
 		textures = {},
 		game_objects = {},
 		url = url,
+		url_binary = url,
 		uid = math.random(0, 10000000)
 	}
 
 	config = config or {}
+
+	if (config.url_binary)
+		instance.url_binary = config.url_binary
 
 	instance.texture_folder = config.textures or "/assets/"
 	if string.find(instance.texture_folder, "/") ~= 1 then
@@ -136,7 +140,7 @@ M.load = function(url, path, config)
 	instance.animator = ANIMATOR.create(instance.binary)
 	instance.models = {}
 
-	for name, model in pairs(models) do 
+	for name, model in pairs(models) do
 
 		instance.models[name] = {}
 		instance.total_frames = model.frames
@@ -154,12 +158,12 @@ M.load = function(url, path, config)
 			--local f = mesh.material.type == 0 and "#factory" or "#factory_trans"
 			--local id = factory.create(url .. f, model.position, model.rotation, {}, model.scale)
 
-			local id = factory.create(msg.url(nil, url.path, "factory"), model.position, model.rotation, {}, model.scale)
+			local id = factory.create(msg.url(instance.url_binary.socket, instance.url_binary.path, "factory"), model.position, model.rotation, {}, model.scale)
 			local mesh_url = msg.url(nil, id, "mesh")
 			mesh:set_url(mesh_url);
 
 			local material = nil
-			local materials = msg.url(nil, url.path, "binary")
+			local materials = msg.url(instance.url_binary.socket, instance.url_binary.path, "binary")
 			pcall(function() material = go.get(materials, mesh.material.name) end)
 
 			if config.materials and config.materials[mesh.material.name] then
