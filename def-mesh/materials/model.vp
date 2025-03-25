@@ -81,8 +81,8 @@ void main()
     }
 
     p = mtx_world * p;
-    p.z /= 10000.;
-    p.z += light.w;
+    //p.z /= 10000.;
+    //p.z += light.w;
 
     var_light = (mtx_view * vec4(light.xyz, 1.0)).xyz;
 
