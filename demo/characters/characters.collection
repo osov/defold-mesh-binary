@@ -1,0 +1,19 @@
+name: "characters"
+instances {
+  id: "model"
+  prototype: "/def-mesh/binary.go"
+}
+scale_along_z: 1
+embedded_instances {
+  id: "go"
+  children: "model"
+  data: "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/demo/characters/characters.script\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"demo\"\n"
+  "  component: \"/main/demo.script\"\n"
+  "}\n"
+  ""
+}

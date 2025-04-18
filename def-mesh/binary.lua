@@ -7,37 +7,36 @@ M.BUFFER_COUNT = 0
 local function create_buffer(buf)
 	M.BUFFER_COUNT = M.BUFFER_COUNT and M.BUFFER_COUNT + 1 or 1
 	local path = "/def-mesh/buffers/buffer" .. M.BUFFER_COUNT .. ".bufferc"
-	return resource.create_buffer(path, {buffer = buf, transfer_ownership = false}), path
+	return resource.create_buffer(path, { buffer = buf, transfer_ownership = false }), path
 end
 
 function native_update_buffer(mesh_url, buffer)
-	resource.set_buffer(go.get(mesh_url, "vertices"), buffer, {transfer_ownership = false})
+	resource.set_buffer(go.get(mesh_url, "vertices"), buffer, { transfer_ownership = false })
 end
 
 function native_runtime_texture(tpath, width, height, buffer)
 	local tparams = {
-		width          = width,
-		height         = height,
-		type           = resource.TEXTURE_TYPE_2D,
-		format         = resource.TEXTURE_FORMAT_RGBA32F,
+		width  = width,
+		height = height,
+		type   = resource.TEXTURE_TYPE_2D,
+		format = resource.TEXTURE_FORMAT_RGBA32F,
 	}
 	resource.set_texture(tpath, tparams, buffer)
 end
 
 local function get_animation_texture(path, model, runtime)
-
 	local tpath = (runtime and path or string.match(path, "(%a-)[$%.]")) .. "_" .. model.armature
-	tpath = "/__anim_" .. tpath:gsub("[%./]", "") ..".texturec"
+	tpath = "/__anim_" .. tpath:gsub("[%./]", "") .. ".texturec"
 
 	if not pcall(function()
-		resource.get_texture_info(tpath)
-	end) then
+			resource.get_texture_info(tpath)
+		end) then
 		local twidth, theight, tbuffer = model:get_animation_buffer(runtime)
 		local tparams = {
-			width          = twidth,
-			height         = theight,
-			type           = resource.TEXTURE_TYPE_2D,
-			format         = resource.TEXTURE_FORMAT_RGBA32F,
+			width  = twidth,
+			height = theight,
+			type   = resource.TEXTURE_TYPE_2D,
+			format = resource.TEXTURE_FORMAT_RGBA32F,
 		}
 
 		return resource.create_texture(tpath, tparams, tbuffer)
@@ -56,20 +55,20 @@ local function set_texture(self, url, slot, file, texel)
 		return false
 	end
 
-	local path = self.texture_folder .. file ..".texturec"
-	local img = imageloader.load{data = data}
+	local path = self.texture_folder .. file .. ".texturec"
+	local img = imageloader.load { data = data }
 
 	local texture_id = hash(path)
 	if not pcall(function()
-		texture_id = resource.create_texture(path, img.header, img.buffer)
-	end) then
+			texture_id = resource.create_texture(path, img.header, img.buffer)
+		end) then
 		--already exists?
 	end
 	self.textures[texture_id] = true
 	go.set(url, slot, texture_id)
 	if texel then
 		pcall(function()
-			go.set(url, texel, vmath.vector4(1./img.header.width, 1./img.header.height, 0, 0))
+			go.set(url, texel, vmath.vector4(1. / img.header.width, 1. / img.header.height, 0, 0))
 		end)
 	end
 	return true
@@ -105,8 +104,9 @@ config = {
 	materials - table of materials to replace,
 	use editor script "Add materials from model" to generate properties
 }
+animations - list path to .bin animation files in custom assets
 --]]
-M.load = function(url, path, config)
+M.load = function(url, path, config, animations)
 	url = type(url) == "string" and msg.url(nil, url, nil) or url
 
 	local instance = {
@@ -136,13 +136,25 @@ M.load = function(url, path, config)
 
 	local models
 	local data = sys.load_resource(path)
+	local animations_data
+	if animations then
+		animations_data = {}
+		for _, animation_path in ipairs(animations) do
+			local animation_data, err = sys.load_resource(animation_path)
+			if err then
+				error(err, 2)
+			else
+				table.insert(animations_data, animation_data)
+			end
+		end
+	end
 
-	instance.binary, models = mesh_utils.load(path, data, url, config.bake or false, config.verbose or false, config.aabb or 0)
+	instance.binary, models = mesh_utils.load(path, data, url, config.bake or false, config.verbose or false,
+		config.aabb or 0, animations_data)
 	instance.animator = ANIMATOR.create(instance.binary)
 	instance.models = {}
 
 	for name, model in pairs(models) do
-
 		instance.models[name] = {}
 		instance.total_frames = model.frames
 
@@ -155,11 +167,11 @@ M.load = function(url, path, config)
 		end
 
 		for i, mesh in ipairs(model.meshes) do
-
 			--local f = mesh.material.type == 0 and "#factory" or "#factory_trans"
 			--local id = factory.create(url .. f, model.position, model.rotation, {}, model.scale)
 
-			local id = factory.create(msg.url(instance.url_binary.socket, instance.url_binary.path, "factory"), model.position, model.rotation, {}, model.scale)
+			local id = factory.create(msg.url(instance.url_binary.socket, instance.url_binary.path, "factory"),
+				model.position, model.rotation, {}, model.scale)
 			local mesh_url = msg.url(nil, id, "mesh")
 			mesh:set_url(mesh_url);
 
@@ -180,10 +192,10 @@ M.load = function(url, path, config)
 			local v, bpath = create_buffer(mesh.buffer)
 			go.set(mesh_url, "vertices", v)
 
-			instance.game_objects[i == 1 and name or (name .. "_" .. i)] = 
+			instance.game_objects[i == 1 and name or (name .. "_" .. i)] =
 			{
-				id = id, 
-				url = mesh_url, 
+				id = id,
+				url = mesh_url,
 				path = bpath,
 				parent = model.parent
 			}
@@ -202,11 +214,10 @@ M.load = function(url, path, config)
 			end
 
 			pcall(function()
-				go.set(mesh_url, "base_color", mesh.material and mesh.material.color or vmath.vector4(1,1,1,1))
+				go.set(mesh_url, "base_color", mesh.material and mesh.material.color or vmath.vector4(1, 1, 1, 1))
 			end)
 		end
-
-	end	
+	end
 
 
 	--set hierarchy
@@ -223,14 +234,14 @@ M.load = function(url, path, config)
 
 
 	---------------------------------------------------------------
-	instance.hide = function(name) 
+	instance.hide = function(name)
 		for _, id in ipairs(instance.models[name]) do
 			msg.post(id, "disable")
 		end
 	end
 
 	---------------------------------------------------------------
-	instance.show = function(name) 
+	instance.show = function(name)
 		for _, id in ipairs(instance.models[name]) do
 			msg.post(id, "enable")
 		end
@@ -254,10 +265,9 @@ M.load = function(url, path, config)
 				end
 			end
 		end
-
 	end
 
-	instance.set_frame = function(frame1, frame2, blend) -- use animator directly for more flexible approach 
+	instance.set_frame = function(frame1, frame2, blend) -- use animator directly for more flexible approach
 		instance.animator.set_frame(0, frame1, frame2, blend)
 		instance.animator.update_tracks()
 	end
@@ -280,7 +290,48 @@ M.load = function(url, path, config)
 	return instance
 end
 
+---@param atlas_info resource.atlas
+---@param texture string
+---@return number?
+local function get_texture_index(atlas_info, texture)
+	for index, animation in ipairs(atlas_info.animations) do
+		if animation.id == texture then
+			return index
+		end
+	end
+end
 
-
+---@param url_mesh userdata|hash
+---@param slot string
+---@param atlas userdata
+---@param texture string
+function M.set_texture_from_atlas(url_mesh, slot, atlas, texture)
+	local atlas_info = resource.get_atlas(atlas)
+	go.set(url_mesh, slot, hash(atlas_info.texture))
+	local index = get_texture_index(atlas_info, texture)
+	if index == nil then
+		error(string.format("Texture '%s' not found!", texture), 2)
+		return
+	end
+	local texture_info = resource.get_texture_info(atlas_info.texture)
+	local uvs = atlas_info.geometries[index].uvs
+	local min_x, min_y, max_x, max_y
+	for index_uv, value in ipairs(uvs) do
+		if index_uv % 2 == 1 then
+			min_x = math.min(min_x or value, value)
+			max_x = math.max(max_x or value, value)
+		else
+			min_y = math.min(min_y or value, value)
+			max_y = math.max(max_y or value, value)
+		end
+	end
+	local uv_texture = vmath.vector4(min_x / texture_info.width, 1 - max_y / texture_info.height,
+		max_x / texture_info.width, 1 - min_y / texture_info.height)
+	go.set(url_mesh, "uv_texture", uv_texture)
+	local is_rotated = uvs[1] ~= uvs[3]
+	local angle = math.rad(is_rotated == true and -90 or 0)
+	local rotation = vmath.vector4(math.cos(angle), math.sin(angle), 0, 0)
+	go.set(url_mesh, "rotation", rotation)
+end
 
 return M

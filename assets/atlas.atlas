@@ -1,0 +1,10 @@
+images {
+  image: "/assets/texture1.png"
+}
+images {
+  image: "/assets/texture3.png"
+}
+images {
+  image: "/assets/texture4.png"
+}
+extrude_borders: 2

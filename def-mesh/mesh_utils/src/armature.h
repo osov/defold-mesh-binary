@@ -21,7 +21,8 @@ class Armature
 		
 		int FindBone(string bone);
 		int GetFramesCount();
-		
+		void AddAnimation(Reader* reader, bool verbose);
+
 		Armature(Reader* reader, bool verbose);
 		~Armature();
 };

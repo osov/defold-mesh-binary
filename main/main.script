@@ -50,6 +50,11 @@ function update(self, dt)
 		load_scene(self, "root")
 	end
 	
+	changed, checked = imgui.checkbox("characters", self.demo == "characters")
+	if changed and checked then
+		load_scene(self, "characters")
+	end
+	
 	imgui.font_pop()
 	imgui.end_window()
 end

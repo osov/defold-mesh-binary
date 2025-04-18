@@ -1,0 +1,42 @@
+go.property('atlas', resource.atlas('/assets/atlas.atlas'));
+
+local binary = require "def-mesh.binary"
+
+function init(self)
+	self.instance = binary.load("/model", "/assets/character1.bin",
+		{
+			verbose = true,
+			bake = true,
+			materials = { _lambert2 = hash("/def-mesh/materials/model_atlas.materialc") }
+		}, {
+			"/assets/animation1.bin",
+			"/assets/animation2.bin"
+		})
+
+	self.instance.set("light", vmath.vector4(0, .5, 1, 0))
+	for _, game_object in pairs(self.instance.game_objects) do
+		binary.set_texture_from_atlas(game_object.url, "texture0", self.atlas, "texture4")
+	end
+
+	self.count = 1
+	self.time = 0
+end
+
+function update(self, dt)
+	if self.instance then
+		self.time = self.time + dt
+		if self.time > .03 then
+			self.time = 0.0
+			self.instance.set_frame(self.count)
+			if self.count > self.instance.total_frames then
+				self.count = 1
+			else
+				self.count = self.count + 1
+			end
+		end
+	end
+end
+
+function final(self)
+	self.instance.delete()
+end
