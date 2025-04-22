@@ -2,41 +2,70 @@ go.property('atlas', resource.atlas('/assets/atlas.atlas'));
 
 local binary = require "def-mesh.binary"
 
-function init(self)
-	self.instance = binary.load("/model", "/assets/character1.bin",
+local anim1 = { "/assets/run.bin" }
+local anim2 = { "/assets/idle.bin" }
+local anim3 = { "/assets/run.bin", "/assets/idle.bin" }
+local character1 = "/assets/character1.bin"
+local character2 = "/assets/character2.bin"
+
+local test = {
+	{ character = character1, animations = anim1, position = vmath.vector3(-1, 0, 0), texture = "texture1" },
+	{ character = character1, animations = anim2, position = vmath.vector3(0, 0, 0), texture = "texture3" },
+	{ character = character1, animations = anim3, position = vmath.vector3(1, 0, 0), texture = "texture4" },
+	{ character = character2, animations = anim1, position = vmath.vector3(-1.5, -1, -1) },
+	{ character = character2, animations = anim2, position = vmath.vector3(-0.5, -1, -1) },
+	{ character = character2, animations = anim3, position = vmath.vector3(0.5, -1, -1) }
+}
+
+local function create_instance(self, bin, animations, texture)
+	local data = {}
+	local instance = factory.create("#factory")
+	local instance_url = msg.url(instance)
+	data.instance = binary.load(instance_url, bin,
 		{
 			verbose = true,
 			bake = true,
 			materials = { _lambert2 = hash("/def-mesh/materials/model_atlas.materialc") }
-		}, {
-			"/assets/animation1.bin",
-			"/assets/animation2.bin"
-		})
+		}, animations)
 
-	self.instance.set("light", vmath.vector4(0, .5, 1, 0))
-	for _, game_object in pairs(self.instance.game_objects) do
-		binary.set_texture_from_atlas(game_object.url, "texture0", self.atlas, "texture4")
+	data.instance.set("light", vmath.vector4(0, .5, 1, 0))
+	if texture then
+		for _, game_object in pairs(data.instance.game_objects) do
+			binary.set_texture_from_atlas(game_object.url, "texture0", self.atlas, texture)
+		end
 	end
 
-	self.count = 1
-	self.time = 0
+	data.count = math.random(50)
+	data.time = 0
+	return data
+end
+
+function init(self)
+	self.instances = {}
+	for _, t in ipairs(test) do
+		local data = create_instance(self, t.character, t.animations, t.texture)
+		go.set_position(t.position, data.instance.url)
+		table.insert(self.instances, data)
+	end
 end
 
 function update(self, dt)
-	if self.instance then
-		self.time = self.time + dt
-		if self.time > .03 then
-			self.time = 0.0
-			self.instance.set_frame(self.count)
-			if self.count > self.instance.total_frames then
-				self.count = 1
+	for _, data in ipairs(self.instances) do
+		data.time = data.time + dt
+		if data.time > .03 then
+			data.time = 0.0
+			data.instance.set_frame(data.count)
+			if data.count > data.instance.total_frames then
+				data.count = 1
 			else
-				self.count = self.count + 1
+				data.count = data.count + 1
 			end
 		end
 	end
 end
 
 function final(self)
-	self.instance.delete()
+	for _, data in ipairs(self.instances) do
+		data.instance.delete()
+	end
 end

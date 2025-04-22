@@ -155,15 +155,14 @@ static int Load(lua_State *L) {
     } else {
         files[path] = new BinaryFile(content, verbose);
         binary = files[path];
-    }
-
-    if (lua_istable(L, 7)) {
-        auto lengthArray = lua_objlen(L, 7);
-        for (auto index = 1; index <= lengthArray; index++) {
-            lua_rawgeti(L, 7, index);
-            const char *animation_data = luaL_checkstring(L, -1);
-            binary->AddAnimation(animation_data, verbose);
-            lua_pop(L, 1);
+        if (lua_istable(L, 7)) {
+            auto lengthArray = lua_objlen(L, 7);
+            for (auto index = 1; index <= lengthArray; index++) {
+                lua_rawgeti(L, 7, index);
+                const char *animation_data = luaL_checkstring(L, -1);
+                binary->AddAnimation(animation_data, verbose);
+                lua_pop(L, 1);
+            }
         }
     }
 

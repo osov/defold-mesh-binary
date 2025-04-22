@@ -4,6 +4,8 @@ local M = {}
 
 M.BUFFER_COUNT = 0
 
+local used_textures = {}
+
 local function create_buffer(buf)
 	M.BUFFER_COUNT = M.BUFFER_COUNT and M.BUFFER_COUNT + 1 or 1
 	local path = "/def-mesh/buffers/buffer" .. M.BUFFER_COUNT .. ".bufferc"
@@ -25,8 +27,7 @@ function native_runtime_texture(tpath, width, height, buffer)
 end
 
 local function get_animation_texture(path, model, runtime)
-	local tpath = (runtime and path or string.match(path, "(%a-)[$%.]")) .. "_" .. model.armature
-	tpath = "/__anim_" .. tpath:gsub("[%./]", "") .. ".texturec"
+	local tpath = string.format("/__anim_%s_%s%s.texturec", path, model.armature, runtime == true and "_runtime" or "")
 
 	if not pcall(function()
 			resource.get_texture_info(tpath)
@@ -49,21 +50,23 @@ local function set_texture(self, url, slot, file, texel)
 	if not file then
 		return false
 	end
-	local data = sys.load_resource(self.texture_folder .. file)
-	if not data then
-		pprint(self.texture_folder .. file .. " not found")
-		return false
-	end
-
 	local path = self.texture_folder .. file .. ".texturec"
-	local img = imageloader.load { data = data }
-
 	local texture_id = hash(path)
-	if not pcall(function()
-			texture_id = resource.create_texture(path, img.header, img.buffer)
-		end) then
-		--already exists?
+	if used_textures[texture_id] == nil then
+		local data = sys.load_resource(self.texture_folder .. file)
+		if not data then
+			pprint(self.texture_folder .. file .. " not found")
+			return false
+		end
+		local img = imageloader.load { data = data }
+		if not pcall(function()
+				texture_id = resource.create_texture(path, img.header, img.buffer)
+			end) then
+			--already exists?
+		end
 	end
+
+	used_textures[texture_id] = (used_textures[texture_id] or 0) + 1
 	self.textures[texture_id] = true
 	go.set(url, slot, texture_id)
 	if texel then
@@ -116,8 +119,7 @@ M.load = function(url, path, config, animations)
 		textures = {},
 		game_objects = {},
 		url = url,
-		url_binary = url,
-		uid = math.random(0, 10000000)
+		url_binary = url
 	}
 
 	config = config or {}
@@ -137,7 +139,8 @@ M.load = function(url, path, config, animations)
 	local models
 	local data = sys.load_resource(path)
 	local animations_data
-	if animations then
+	local path_hash = hash_to_hex(hash(path))
+	if animations and #animations > 0 then
 		animations_data = {}
 		for _, animation_path in ipairs(animations) do
 			local animation_data, err = sys.load_resource(animation_path)
@@ -147,10 +150,13 @@ M.load = function(url, path, config, animations)
 				table.insert(animations_data, animation_data)
 			end
 		end
+		local list_files = string.format("%s,%s", path, table.concat(animations, ","))
+		path_hash = hash_to_hex(hash(list_files))
 	end
 
-	instance.binary, models = mesh_utils.load(path, data, url, config.bake or false, config.verbose or false,
+	instance.binary, models = mesh_utils.load(path_hash, data, url, config.bake or false, config.verbose or false,
 		config.aabb or 0, animations_data)
+
 	instance.animator = ANIMATOR.create(instance.binary)
 	instance.models = {}
 
@@ -161,8 +167,8 @@ M.load = function(url, path, config, animations)
 		local anim_texture, runtime_texture
 
 		if model.frames > 1 and config.bake then
-			anim_texture = get_animation_texture(path, model)
-			runtime_texture = get_animation_texture(instance.uid, model, true)
+			anim_texture = get_animation_texture(path_hash, model)
+			runtime_texture = get_animation_texture(path_hash, model, true)
 			model:set_runtime_texture(runtime_texture)
 		end
 
@@ -261,7 +267,15 @@ M.load = function(url, path, config, animations)
 		if instance.binary then
 			if instance.binary:delete() then --clean up textures, no more instances
 				for texture, _ in pairs(instance.textures) do
-					resource.release(texture)
+					if used_textures[texture] then
+						used_textures[texture] = used_textures[texture] - 1
+						if used_textures[texture] == 0 then
+							used_textures[texture] = nil
+							resource.release(texture)
+						end
+					else
+						resource.release(texture)
+					end
 				end
 			end
 		end
