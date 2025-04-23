@@ -176,6 +176,15 @@ static int Load(lua_State *L) {
     lua_pushstring(L, path.c_str());
     lua_settable(L, -3);
 
+    vector<int> countFramesInAnimations = binary->GetCountFramesInAnimations();
+    lua_pushstring(L, "count_frames_in_animations");
+    lua_newtable(L);
+    for (int i = 0; i < countFramesInAnimations.size(); i++) {
+        lua_pushnumber(L, countFramesInAnimations[i]);
+        lua_rawseti(L, -2, i + 1);
+    }
+    lua_settable(L, -3);
+
     static const luaL_Reg f[] =
     {
         {"switch_root_motion", SwitchRootMotion},

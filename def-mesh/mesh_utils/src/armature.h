@@ -13,6 +13,7 @@ class Armature
 		vector< vector<Matrix4> > frames;
 		vector<Matrix4> localBones;
 		vector<int> boneParents;
+		vector<int> countFramesInAnimations;
 
 		int rootBoneIdx = 0;
 

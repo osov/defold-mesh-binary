@@ -13,6 +13,7 @@ class BinaryFile
 		int instances = 0;
 
 		void AddAnimation(const char *file, bool verbose);
+		vector<int> GetCountFramesInAnimations();
 		Instance* CreateInstance(dmGameObject::HInstance obj, bool useBakedAnimations, float scaleAABB);
 
 		BinaryFile(const char* file, bool verbose);

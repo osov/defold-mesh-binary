@@ -29,6 +29,7 @@ Armature::Armature(Reader *reader, bool verbose) {
     }
 
     int frameCount = reader->ReadInt();
+    this->countFramesInAnimations.push_back(frameCount);
     if (verbose)
         dmLogInfo("frames: %d", frameCount);
 
@@ -78,6 +79,7 @@ void Armature::AddAnimation(Reader *reader, bool verbose) {
         reader->ReadMatrix();
     }
     int frameCount = reader->ReadInt();
+    this->countFramesInAnimations.push_back(frameCount);
     if (verbose)
         dmLogInfo("add animation frames: %d", frameCount);
 

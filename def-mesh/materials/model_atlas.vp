@@ -19,7 +19,7 @@ uniform uniforms_vp {
     highp vec4 light;
     highp vec4 uv_texture;
     highp vec4 rotation;
-    vec4 bones[800];
+    vec4 bones[100];
 
 };
 

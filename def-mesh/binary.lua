@@ -140,7 +140,8 @@ M.load = function(url, path, config, animations)
 	local data = sys.load_resource(path)
 	local animations_data
 	local path_hash = hash_to_hex(hash(path))
-	if animations and #animations > 0 then
+	local is_add_animations = animations and #animations > 0
+	if is_add_animations then
 		animations_data = {}
 		for _, animation_path in ipairs(animations) do
 			local animation_data, err = sys.load_resource(animation_path)
@@ -158,8 +159,23 @@ M.load = function(url, path, config, animations)
 		config.aabb or 0, animations_data)
 
 	instance.animator = ANIMATOR.create(instance.binary)
-	instance.models = {}
+	if is_add_animations then
+		local count_frames_in_animations = instance.binary.count_frames_in_animations
+		if #animations ~= #count_frames_in_animations - 1 then
+			error("The number of animations does not match! Unable to create a list of animations!", 2)
+		end
+		local list_animations = {}
+		local first_frame = count_frames_in_animations[1]
+		for index, animation_path in ipairs(animations) do
+			local _, _, animation_name = string.find(animation_path, "/?([^/]+)%.")
+			local finish_frame = first_frame + count_frames_in_animations[index + 1]
+			list_animations[animation_name] = { start = first_frame, finish = finish_frame - 1 }
+			first_frame = finish_frame
+		end
+		instance.animator.list = list_animations
+	end
 
+	instance.models = {}
 	for name, model in pairs(models) do
 		instance.models[name] = {}
 		instance.total_frames = model.frames

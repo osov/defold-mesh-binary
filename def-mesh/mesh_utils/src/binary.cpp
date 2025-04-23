@@ -30,6 +30,10 @@ void BinaryFile::AddAnimation(const char *file, bool verbose) {
     }
 }
 
+vector<int> BinaryFile::GetCountFramesInAnimations() {
+    return this->armatures[0]->countFramesInAnimations;
+}
+
 BinaryFile::~BinaryFile() {
     for (auto &model: this->models) {
         delete model;
