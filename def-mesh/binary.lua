@@ -320,48 +320,4 @@ M.load = function(url, path, config, animations)
 	return instance
 end
 
----@param atlas_info resource.atlas
----@param texture string
----@return number?
-local function get_texture_index(atlas_info, texture)
-	for index, animation in ipairs(atlas_info.animations) do
-		if animation.id == texture then
-			return index
-		end
-	end
-end
-
----@param url_mesh userdata|hash
----@param slot string
----@param atlas userdata
----@param texture string
-function M.set_texture_from_atlas(url_mesh, slot, atlas, texture)
-	local atlas_info = resource.get_atlas(atlas)
-	go.set(url_mesh, slot, hash(atlas_info.texture))
-	local index = get_texture_index(atlas_info, texture)
-	if index == nil then
-		error(string.format("Texture '%s' not found!", texture), 2)
-		return
-	end
-	local texture_info = resource.get_texture_info(atlas_info.texture)
-	local uvs = atlas_info.geometries[index].uvs
-	local min_x, min_y, max_x, max_y
-	for index_uv, value in ipairs(uvs) do
-		if index_uv % 2 == 1 then
-			min_x = math.min(min_x or value, value)
-			max_x = math.max(max_x or value, value)
-		else
-			min_y = math.min(min_y or value, value)
-			max_y = math.max(max_y or value, value)
-		end
-	end
-	local uv_texture = vmath.vector4(min_x / texture_info.width, 1 - max_y / texture_info.height,
-		max_x / texture_info.width, 1 - min_y / texture_info.height)
-	go.set(url_mesh, "uv_texture", uv_texture)
-	local is_rotated = uvs[1] ~= uvs[3]
-	local angle = math.rad(is_rotated == true and -90 or 0)
-	local rotation = vmath.vector4(math.cos(angle), math.sin(angle), 0, 0)
-	go.set(url_mesh, "rotation", rotation)
-end
-
 return M
