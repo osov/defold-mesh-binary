@@ -1,23 +1,101 @@
-go.property('atlas', resource.atlas('/assets/atlas.atlas'));
+go.property('atlas', resource.atlas('/assets/atlas1.atlas'));
 
 local binary = require "def-mesh.binary"
+local tracks = require "demo.layers.mask"
+local uv = require "def-mesh.uv"
 
 local anim1 = { "/assets/run.bin" }
 local anim2 = { "/assets/idle.bin" }
 local anim3 = { "/assets/run.bin", "/assets/idle.bin" }
 local character1 = "/assets/character1.bin"
 local character2 = "/assets/character2.bin"
+local rogue = "/assets/rogue.bin"
 
-local test = {
-	{ character = character1, animations = anim1, position = vmath.vector3(-1, 0, 0), texture = "texture1" },
-	{ character = character1, animations = anim2, position = vmath.vector3(0, 0, 0), texture = "texture3" },
-	{ character = character1, animations = anim3, position = vmath.vector3(1, 0, 0), texture = "texture4" },
-	{ character = character2, animations = anim1, position = vmath.vector3(-1.5, -1, -1) },
-	{ character = character2, animations = anim2, position = vmath.vector3(-0.5, -1, -1) },
-	{ character = character2, animations = anim3, position = vmath.vector3(0.5, -1, -1) }
+local texture_mask = {
+	-- "texture1", "texture3", "texture4", "texture1", "texture3", "texture4", "texture1", "texture4"
+	"texture3", "texture3", "texture1", "texture1", "texture4", "texture4", "texture1", "texture1"
+}
+local texture = "texture3"
+local texture_mask2 = {
+	texture, texture, texture, texture, texture, texture, texture, texture
 }
 
-local function create_instance(self, bin, animations, texture)
+local texture_mask3 = {
+	"texture1", "texture1", "texture1", "texture1", "texture3", "texture3", "texture4", "texture4"
+}
+
+local texture_mask4 = {
+	"mage_texture_low", "mage_texture_low", "rogue_texture", "mage_texture_low", "rogue_texture", "mage_texture_low",
+	"rogue_texture", "mage_texture_low"
+}
+
+local uv_offsets = {
+	vmath.vector3(0, 0.5, 0), nil, vmath.vector3(1 / 8, 0, 0),
+}
+
+---@type meshbinary.uv_info[]
+local tex_info = {
+	{
+		mask_color = vmath.vector3(0, 0, 0),
+		-- texture = "rogue_texture",
+		uv_offset = vmath.vector3(0, 0.25, 0)
+	},
+	{
+		mask_color = vmath.vector3(255, 0, 0),
+		texture = "mage_texture_low"
+	},
+	{
+		mask_color = vmath.vector3(255, 255, 0),
+		-- texture = "rogue_texture"
+	},
+	{
+		mask_color = vmath.vector3(255, 0, 255),
+		texture = "mage_texture_low"
+	},
+	{
+		mask_color = vmath.vector3(0, 255, 0),
+		-- texture = "rogue_texture",
+		uv_offset = vmath.vector3(0.25, 0, 0)
+	},
+	{
+		mask_color = vmath.vector3(0, 255, 255),
+		texture = "mage_texture_low"
+	},
+	{
+		mask_color = vmath.vector3(255, 255, 255),
+		texture = "mage_texture_low",
+		uv_offset = vmath.vector3(0.5, 0, 0)
+	}
+}
+
+local name_mask_texture = "/assets/mask_texture.png"
+
+-- local test = {
+-- 	{ character = character1, animations = anim1, position = vmath.vector3(-1, 0, 0),    texture = "texture1" },
+-- 	-- { character = character1, animations = anim1, position = vmath.vector3(0, 0, 0),    texture = "texture1" },
+-- 	{ character = character1, animations = anim2, position = vmath.vector3(0, 0, 0),     texture = "texture3" },
+-- 	{ character = character1, animations = anim3, position = vmath.vector3(1, 0, 0),     texture = "texture4" },
+-- 	{ character = character2, animations = anim1, position = vmath.vector3(-1.5, -1, -1) },
+-- 	{ character = character2, animations = anim2, position = vmath.vector3(-0.5, -1, -1) },
+-- 	{ character = character2, animations = anim3, position = vmath.vector3(0.5, -1, -1) }
+-- }
+
+local test = {
+	{ character = rogue, position = vmath.vector3(-1.2, -1, 0), texture = "rogue_texture" },
+	{ character = rogue, position = vmath.vector3(0, -1, 0),    texture = tex_info,          uv_offsets = uv_offsets },
+	{ character = rogue, position = vmath.vector3(1.2, -1, 0),  texture = "mage_texture_low" },
+}
+
+-- local test = {
+-- 	{ character = character1, animations = anim1, position = vmath.vector3(-1, 0, 0), texture = texture_mask3 },
+-- 	{ character = character1, animations = anim2, position = vmath.vector3(0, 0, 0), texture = texture_mask },
+-- 	{ character = character1, animations = anim3, position = vmath.vector3(1, 0, 0), texture = texture_mask2 },
+-- 	{ character = character2, animations = anim1, position = vmath.vector3(-1.5, -1, -1) },
+-- 	{ character = character2, animations = anim2, position = vmath.vector3(-0.5, -1, -1) },
+-- 	{ character = character2, animations = anim3, position = vmath.vector3(0.5, -1, -1) }
+-- }
+
+local function create_instance(self, bin, animations, texture, uv_offsets)
 	local data = {}
 	local instance = factory.create("#factory")
 	local instance_url = msg.url(instance)
@@ -26,12 +104,20 @@ local function create_instance(self, bin, animations, texture)
 			verbose = true,
 			bake = true,
 			materials = { _lambert2 = hash("/def-mesh/materials/model_atlas.materialc") }
+			-- materials = { _lambert2 = hash("/def-mesh/materials/model_atlas_with_mask.materialc") }
 		}, animations)
 
 	data.instance.set("light", vmath.vector4(0, .5, 1, 0))
 	if texture then
 		for _, game_object in pairs(data.instance.game_objects) do
-			binary.set_texture_from_atlas(game_object.url, "texture0", self.atlas, texture)
+			if type(texture) == "table" then
+				-- uv.set_textures_for_mask(game_object.url, "texture0", self.atlas, texture)
+				-- uv.set_uv_textures_for_mask(game_object.url, "texture0", self.atlas, texture, name_mask_texture)
+				uv.set_uv_textures_for_mask(game_object.url, "texture0", self.atlas, texture, name_mask_texture, "rogue_texture")
+			else
+				-- uv.set_texture_from_atlas(game_object.url, "texture0", self.atlas, texture)
+				uv.set_uv_texture_from_atlas(game_object.url, "texture0", self.atlas, texture)
+			end
 		end
 	end
 
@@ -43,24 +129,28 @@ end
 function init(self)
 	self.instances = {}
 	for _, t in ipairs(test) do
-		local data = create_instance(self, t.character, t.animations, t.texture)
+		local data = create_instance(self, t.character, t.animations, t.texture, t.uv_offsets)
+		go.set_scale(vmath.vector3(0.5), data.instance.url)
 		go.set_position(t.position, data.instance.url)
 		table.insert(self.instances, data)
 	end
+
+	-- local data = self.instances[3]
+	-- local track = data.instance.animator.add_track(tracks.mask1)
+
+	-- data.instance.animator.play("run", { playback = go.PLAYBACK_LOOP_FORWARD });
+	-- data.instance.animator.play("idle", { track = 1, playback = go.PLAYBACK_LOOP_FORWARD });
+
+	-- local checked = false
+	-- timer.delay(1, true, function(self, handle, time_elapsed)
+	-- 	data.instance.animator.set_weight(track, checked and 1 or 0, .3)
+	-- 	checked = not checked
+	-- end)
 end
 
 function update(self, dt)
 	for _, data in ipairs(self.instances) do
-		data.time = data.time + dt
-		if data.time > .03 then
-			data.time = 0.0
-			data.instance.set_frame(data.count)
-			if data.count > data.instance.total_frames then
-				data.count = 1
-			else
-				data.count = data.count + 1
-			end
-		end
+		data.instance.animator.update(dt)
 	end
 end
 
@@ -68,4 +158,5 @@ function final(self)
 	for _, data in ipairs(self.instances) do
 		data.instance.delete()
 	end
+	uv.final()
 end

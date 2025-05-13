@@ -1,0 +1,10 @@
+images {
+  image: "/assets/texture3.png"
+}
+images {
+  image: "/assets/rogue_texture.png"
+}
+images {
+  image: "/assets/mage_texture_low.png"
+}
+extrude_borders: 2
