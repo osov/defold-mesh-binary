@@ -14,7 +14,7 @@ void main()
     vec4 color = texture(tex_diffuse, var_texcoord0);
 
     vec3 ambient_light = vec3(0.2);
-    vec3 diff_light = vec3(normalize(var_light - var_position.xyz));
+    vec3 diff_light = vec3(normalize(var_light - vec3(var_position.xy, 0.)));
     diff_light = max(dot(var_normal,diff_light), 0.0) + ambient_light;
     diff_light = clamp(diff_light, 0.0, 1.0);
 
