@@ -83,16 +83,14 @@ void main()
     }
 
     p = mtx_world * p;
-    //p.z /= 10000.;
-    //p.z += light.w;
 
-    var_light = (mtx_view * vec4(light.xyz, 1.0)).xyz;
-
+    var_light = light.xyz;
     var_position = p;
+
     highp vec2 coord = texcoord0.xy - vec2(0.5);
     coord = vec2(coord.x * rotation.x - coord.y * rotation.y, coord.x * rotation.y + coord.y * rotation.x) + vec2(0.5);
     var_texcoord0 = (uv_texture.zw - uv_texture.xy) * coord + uv_texture.xy;
-    var_normal = normal;
+    var_normal = normalize((mtx_normal * vec4(n, 0.0)).xyz);
     gl_Position =  mtx_proj *  mtx_view * p;
 }
 
