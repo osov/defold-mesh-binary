@@ -137,7 +137,11 @@ M.load = function(url, path, config, animations)
 	end
 
 	local models
-	local data = sys.load_resource(path)
+	local data, err = sys.load_resource(path)
+	if err then
+		error(err, 2)
+		return
+	end
 	local animations_data
 	local path_hash = hash_to_hex(hash(path))
 	local is_add_animations = animations and #animations > 0
@@ -147,6 +151,7 @@ M.load = function(url, path, config, animations)
 			local animation_data, err = sys.load_resource(animation_path)
 			if err then
 				error(err, 2)
+				return
 			else
 				table.insert(animations_data, animation_data)
 			end
