@@ -86,7 +86,7 @@ local function get_bone_go(self, bone)
 
 	local parent = self.binary:attach_bone_go(id, bone)
 	if parent then
-		go.set_parent(id, parent)
+		go.set_parent(id, parent, true)
 		self.bones_go[bone] = id
 
 		return id
@@ -309,7 +309,7 @@ M.load = function(url, path, config, animations)
 
 	instance.attach = function(bone, target_url)
 		local id = get_bone_go(instance, bone)
-		go.set_parent(target_url, id, true)
+		go.set_parent(target_url, id, false)
 	end
 
 	instance.set_shapes = function(shapes)
