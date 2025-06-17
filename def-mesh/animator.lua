@@ -52,8 +52,9 @@ local function animation_update(self, dt)
 	local frame = self.start + math.floor(self.length * part)
 	
 	if full >= 1 then --TODO loop
-		frame = self.start + 1 -- skip first frame on loop
-		self.time = 2 / self.fps -- self.time - self.duration * full
+		-- frame = self.start + 1 -- skip first frame on loop
+		-- self.time = 2 / self.fps -- self.time - self.duration * full
+		self.time = self.time % self.duration
 	end
 
 	
